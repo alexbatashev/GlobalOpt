@@ -2,10 +2,20 @@
 
 #include "stack_allocator.h"
 
+double getM(double r, std::vector<point> &points) {
+    double mBig = 0;
+    for (int i = 1; i < points.size(); i++) {
+        double tmp = std::abs(points[i].y - points[i-1].y) / (points[i].x - points[i - 1].x);
+        mBig = std::max(mBig, tmp);
+    }
+
+    return mBig > 0 ? r * mBig : 1;
+}
+
 OptResult optimize(const std::function<double(double)> &eval,
               const std::function<double(double, double, double, double, double)> &measure,
               const std::function<double(double, double, double, double, double)> &next,
-              double m, double epsilon, double x_min, double x_max) {
+              double r, double epsilon, double x_min, double x_max) {
     std::vector<point> points;
     points.reserve(205);
 
@@ -20,7 +30,10 @@ OptResult optimize(const std::function<double(double)> &eval,
         std::sort(points.begin(), points.end(), [](const auto &a, const auto &b){
             return a.x < b.x;
         });
-        std::vector<double> measures;
+
+        double m = getM(r, points);
+
+        std::vector<double, stack_allocator<double, 200>> measures;
         measures.reserve(points.size());
         for (int j = 1; j < points.size(); j++) {
             auto curPoint = points[j];

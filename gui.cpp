@@ -5,13 +5,14 @@
 #include "optimizer.h"
 
 #include <imgui_plot.hpp>
+#include <cmath>
 
-char buf[256] = "0.2*sin(x) + 3 * cos(x)";
+char buf[256] = "2*sin(2*x) + 3 * cos(4*x)";
 
-float m = 0.15;
+float r = 1.5;
 float minx = -1;
 float maxx = 1;
-float epsilon = 0.0001;
+float epsilon = 0.01;
 int method;
 
 float x[1000];
@@ -30,12 +31,29 @@ double cot(double i) {
     return cos(i) / sin(i);
 }
 
+double msin(double i) {
+    return std::sin(i);
+}
+
+double mcos(double i) {
+    return std::cos(i);
+}
+
+double mtan(double i) {
+    return std::tan(i);
+}
+
+double mpow(double a, double b) {
+    return std::pow(a, b);
+}
+
 void init() {
     chai = std::make_unique<chaiscript::ChaiScript>();
-    chai->add(chaiscript::fun(&sin), "sin");
-    chai->add(chaiscript::fun(&cos), "cos");
-    chai->add(chaiscript::fun(&tan), "tan");
+    chai->add(chaiscript::fun(&msin), "sin");
+    chai->add(chaiscript::fun(&mcos), "cos");
+    chai->add(chaiscript::fun(&mtan), "tan");
     chai->add(chaiscript::fun(&cot), "cot");
+    chai->add(chaiscript::fun(&mpow), "pow");
 }
 
 void calculateFunction(const std::string &function) {
@@ -65,8 +83,8 @@ auto piyavskyMeasure = [](double curX, double curY, double prevX, double prevY, 
 };
 
 auto piyavskyNext = [](double curX, double curY, double prevX, double prevY, double m) {
-    //return (curX + prevX) / 2 - (curY - prevY) / (2*m);
-  return (curX - prevX) / 2 + (curY - prevY) / (2*m);
+  return (curX + prevX) / 2 - (curY - prevY) / (2*m);
+  //return (curX - prevX) / 2 + (curY - prevY) / (2*m);
 };
 
 auto stronginMeasure = [](double curX, double curY, double prevX, double prevY, double m) {
@@ -74,8 +92,8 @@ auto stronginMeasure = [](double curX, double curY, double prevX, double prevY, 
 };
 
 auto stronginNext = [](double curX, double curY, double prevX, double prevY, double m) {
-  //return (curX + prevX) / 2 - (curY - prevY) / (2*m);
-  return (curX - prevX) / 2 + (curY - prevY) / (2*m);
+  return (curX + prevX) / 2 - (curY - prevY) / (2*m);
+  //return (curX - prevX) / 2 + (curY - prevY) / (2*m);
 };
 
 void drawGUI(ImGuiIO &io) {
@@ -90,8 +108,8 @@ void drawGUI(ImGuiIO &io) {
 
     ImGui::Begin("Controls", nullptr, window_flags);
     ImGui::InputText("f(x)", buf, 256);
-    ImGui::InputFloat("m", &m, 0.01, 0.05);
-    ImGui::InputFloat("epsilon", &epsilon, 0.001, 0.005);
+    ImGui::InputFloat("r", &r, 0.01, 0.05);
+    ImGui::InputFloat("epsilon", &epsilon, 0.001, 0.005, "%.5g");
     ImGui::InputFloat("min x", &minx, 0.01, 1);
     ImGui::InputFloat("max x", &maxx, 0.01, 1);
     ImGui::RadioButton("Bruteforce", &method, 0);
@@ -129,7 +147,7 @@ void drawGUI(ImGuiIO &io) {
                 std::terminate();
         }
 
-        auto optRes = optimize(eval, measure, next, m, epsilon, minx, maxx);
+        auto optRes = optimize(eval, measure, next, r, epsilon, minx, maxx);
         minPoints = optRes.points;
         measuredX = (float)optRes.min.x;
         measuredY = (float)optRes.min.y;

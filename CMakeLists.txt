@@ -7,9 +7,10 @@ option(USE_OPENGL ON)
 
 if (USE_OPENGL)
     message(STATUS "Using OpenGL")
-    find_package(PkgConfig REQUIRED)
-    pkg_search_module(GLFW REQUIRED glfw3)
-    set(LIBS ${GLUT_LIBRARIES} ${GLFW_STATIC_LIBRARIES})
+    #find_package(PkgConfig REQUIRED)
+    #pkg_search_module(GLFW REQUIRED glfw3)
+    find_package(glfw3 3.3 REQUIRED)
+    set(LIBS ${GLUT_LIBRARY} glfw)
     set(SRCS
             ${CMAKE_SOURCE_DIR}/contrib/glad/src/glad.c
             ${CMAKE_SOURCE_DIR}/contrib/imgui/examples/imgui_impl_glfw.cpp
